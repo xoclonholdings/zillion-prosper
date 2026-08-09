@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: zillion-prosper
+    runtime: node
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: REQUIRE_DATABASE
+        value: "true"
+      - key: DATABASE_URL
+        sync: false
+      - key: ZILLION_CAPABILITY_SECRET
+        sync: false
+      - key: ZCOS_CAPABILITY_BASE_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false

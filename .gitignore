@@ -1,0 +1,11 @@
+node_modules/
+.npm-cache/
+dist/
+.data/
+.env
+.env.*
+!.env.example
+hub/
+uploads/
+*.log
+.DS_Store
