@@ -8,6 +8,7 @@ import { registerTradingStagesRoutes } from "./trading-stages";
 import { registerTradingWebullRoutes } from "./trading-webull";
 import { registerTradingPolymarketRoutes } from "./trading-polymarket";
 import { registerTradingTradovateRoutes } from "./trading-tradovate";
+import { registerTradingSimulationRoutes } from "./trading-simulation";
 
 /**
  * Phase 1 Trading Intelligence routes — split by domain across the
@@ -25,4 +26,5 @@ export function registerTradingRoutes(app: Express): void {
   registerTradingWebullRoutes(app);
   registerTradingPolymarketRoutes(app);
   registerTradingTradovateRoutes(app);
+  registerTradingSimulationRoutes(app);
 }

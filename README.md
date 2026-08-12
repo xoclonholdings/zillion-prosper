@@ -36,6 +36,6 @@ Live broker execution remains blocked independently by certification checks.
 - `ZILLION_CAPABILITY_SECRET`
 - `ZCOS_CAPABILITY_BASE_URL`
 - `FRONTEND_URL`
-- Client build variables `VITE_API_BASE_URL` and `VITE_ZAR_API_URL`
+- Client build variables `VITE_API_BASE_URL`, `VITE_ZAR_APP_URL`, and `VITE_ZCOS_PORTAL_URL`
 
 See [SPEC.md](./SPEC.md) and [MIGRATION_MANIFEST.md](./MIGRATION_MANIFEST.md).

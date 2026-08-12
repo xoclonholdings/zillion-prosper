@@ -135,6 +135,8 @@ export function registerTradingPaperRoutes(app: Express): void {
       ruleViolations: toArray(req.body.ruleViolations),
       authorizationDecisionId: authorization.decision.id,
       authorizationDecision: authorization.decision.decision as AuthorizationDecision,
+      executionMode: "internal",
+      executionEnvironment: "simulation",
     });
     res.json({ trade, authorization: authorization.decision });
   });

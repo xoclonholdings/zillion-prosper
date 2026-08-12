@@ -206,6 +206,7 @@ export interface PaperTrade {
   authorizationDecisionId?: string;
   authorizationDecision?: AuthorizationDecision;
   executionMode?: "internal" | "external_paper" | "live";
+  executionEnvironment?: "simulation" | "external_paper" | "live";
   executionProvider?: "webull" | "tradovate" | "lucid" | "custom";
   externalOrderId?: string;
   externalOrderStatus?: "staged" | "submitted" | "filled" | "rejected" | "cancelled";

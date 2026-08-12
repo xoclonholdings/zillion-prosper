@@ -693,7 +693,7 @@ export const TradingStore = {
       leastSuccessfulSetups: patternAnalytics.lowestWinRateSetups,
       patternAnalytics,
       notes: [
-        "Phase 1 is simulation-only. No broker connection or live execution exists.",
+        "This performance report contains Simulation and paper-trading evidence only. It is not proof of Live execution.",
         closedTrades.length < 20
           ? "Sample size is still small. Avoid overfitting conclusions until more paper trades are logged."
           : "Sample size is becoming useful for setup validation.",

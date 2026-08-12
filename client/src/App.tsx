@@ -1,26 +1,44 @@
 import { useEffect, useState } from "react";
-import { Link, Route, Switch, useLocation } from "wouter";
-import { Landmark, LineChart, ShieldCheck } from "lucide-react";
+import { Route, Switch, useLocation } from "wouter";
+import { ShieldCheck } from "lucide-react";
 
 import BudgetPage from "@/pages/budget";
-import TradingPage from "@/pages/trading";
+import LegacyTradingIntelligencePage from "@/pages/trading";
 import { Button } from "@/components/ui/button";
+import {
+  CapitalOverview,
+  GalaxyDomainPage,
+  InvestWorkspace,
+  LiveWorkspace,
+  TradeChoicePage,
+  ZcosBridgePage,
+} from "@/zcos/CapitalDestinations";
+import { CapitalWorkspaceShell } from "@/zcos/CapitalWorkspaceShell";
+import { SimulationWorkspace } from "@/zcos/SimulationWorkspace";
+import { ZillionGalaxyPage } from "@/zcos/ZillionGalaxyPage";
+import { configuredZarOrigin } from "@/zcos/galaxyManifest";
 
 interface CapitalUser {
   id: string;
 }
 
+const PENDING_PATH_KEY = "zillion.pendingPath";
+
 function LaunchGate() {
-  const next = window.location.pathname.startsWith("/trading") ? "/trading" : "/budget";
-  const zarOrigin = (import.meta.env.VITE_ZAR_API_URL || "").replace(/\/$/, "");
+  const zarOrigin = configuredZarOrigin();
   const href = zarOrigin
-    ? `${zarOrigin}/api/capital/launch?path=${encodeURIComponent(next)}`
+    ? zarOrigin + "/api/capital/launch?path=%2F"
     : "#";
 
+  useEffect(() => {
+    const pending = window.location.pathname + window.location.search;
+    if (pending !== "/") sessionStorage.setItem(PENDING_PATH_KEY, pending);
+  }, []);
+
   return (
-    <main className="min-h-screen bg-[#020617] px-4 py-16 text-white">
+    <main className="min-h-[100dvh] bg-[#020617] px-4 py-16 text-white">
       <section className="zar-glass mx-auto max-w-md rounded-3xl p-6 text-center">
-        <ShieldCheck className="mx-auto h-9 w-9 text-cyan-300" />
+        <ShieldCheck className="mx-auto h-9 w-9 text-emerald-300" />
         <h1 className="mt-4 text-2xl font-semibold">ZILLION Prosper</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Capital access is issued by your authenticated ZCOS identity.
@@ -30,7 +48,7 @@ function LaunchGate() {
         </Button>
         {!zarOrigin && (
           <p className="mt-3 text-xs text-amber-200">
-            VITE_ZAR_API_URL is not configured.
+            VITE_ZAR_APP_URL is not configured.
           </p>
         )}
       </section>
@@ -38,53 +56,52 @@ function LaunchGate() {
   );
 }
 
-function CapitalHome() {
+function RedirectTo({ to }: { to: string }) {
   const [, navigate] = useLocation();
-  return (
-    <main className="mx-auto min-h-screen max-w-5xl px-4 py-10 text-white">
-      <p className="text-xs uppercase tracking-[0.22em] text-cyan-300">ZILLION Prosper</p>
-      <h1 className="mt-2 text-3xl font-semibold">Capital</h1>
-      <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-        Budgeting, investing research, paper trading, market analysis, and governed capital systems.
-        Live trading is blocked until separately certified.
-      </p>
-      <div className="mt-8 grid gap-4 md:grid-cols-2">
-        <button className="zar-glass rounded-2xl p-5 text-left" onClick={() => navigate("/budget")}>
-          <Landmark className="h-6 w-6 text-emerald-300" />
-          <div className="mt-4 text-lg font-semibold">Budget & Treasury</div>
-          <p className="mt-1 text-sm text-muted-foreground">Dual Reserve allocation and capital readiness.</p>
-        </button>
-        <button className="zar-glass rounded-2xl p-5 text-left" onClick={() => navigate("/trading")}>
-          <LineChart className="h-6 w-6 text-cyan-300" />
-          <div className="mt-4 text-lg font-semibold">Trading Intelligence</div>
-          <p className="mt-1 text-sm text-muted-foreground">Learning, strategy, validation, paper trading, and governance.</p>
-        </button>
-      </div>
-    </main>
-  );
+  useEffect(() => {
+    navigate(to, { replace: true });
+  }, [navigate, to]);
+  return null;
 }
 
-function CapitalShell() {
+function CapitalRouter() {
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    const pending = sessionStorage.getItem(PENDING_PATH_KEY);
+    if (!pending) return;
+    sessionStorage.removeItem(PENDING_PATH_KEY);
+    if (pending.startsWith("/")) navigate(pending, { replace: true });
+  }, [navigate]);
+
   return (
-    <div className="min-h-screen bg-[#020617] text-white">
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-[#020617]/90 backdrop-blur">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <Link href="/" className="text-sm font-semibold tracking-wide text-cyan-200">ZILLION Prosper</Link>
-          <div className="flex gap-4 text-xs text-muted-foreground">
-            <Link href="/budget">Budget</Link>
-            <Link href="/trading">Trading</Link>
-          </div>
-        </nav>
-      </header>
-      <div className="mx-auto max-w-6xl px-4 py-6">
-        <Switch>
-          <Route path="/" component={CapitalHome} />
-          <Route path="/budget" component={BudgetPage} />
-          <Route path="/trading" component={TradingPage} />
-          <Route>Not found</Route>
-        </Switch>
-      </div>
-    </div>
+    <Switch>
+      <Route path="/" component={ZillionGalaxyPage} />
+      <Route path="/galaxy/zillion" component={ZillionGalaxyPage} />
+      <Route path="/domain/:domain" component={GalaxyDomainPage} />
+      <Route path="/capital" component={CapitalOverview} />
+      <Route path="/capital/chat"><ZcosBridgePage kind="chat" /></Route>
+      <Route path="/capital/upload"><ZcosBridgePage kind="upload" /></Route>
+      <Route path="/capital/budget">
+        <CapitalWorkspaceShell title="Budget"><BudgetPage /></CapitalWorkspaceShell>
+      </Route>
+      <Route path="/capital/trade" component={TradeChoicePage} />
+      <Route path="/capital/trade/simulation" component={SimulationWorkspace} />
+      <Route path="/capital/trade/live" component={LiveWorkspace} />
+      <Route path="/capital/trade/intelligence">
+        <CapitalWorkspaceShell title="Trading Intelligence">
+          <LegacyTradingIntelligencePage />
+        </CapitalWorkspaceShell>
+      </Route>
+      <Route path="/capital/invest" component={InvestWorkspace} />
+      <Route path="/budget"><RedirectTo to="/capital/budget" /></Route>
+      <Route path="/trading"><RedirectTo to="/capital/trade" /></Route>
+      <Route>
+        <CapitalWorkspaceShell title="Not found">
+          <p className="text-sm text-white/55">This ZILLION destination does not exist.</p>
+        </CapitalWorkspaceShell>
+      </Route>
+    </Switch>
   );
 }
 
@@ -102,7 +119,13 @@ export default function App() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="min-h-screen bg-[#020617]" />;
+  if (loading) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[#02050b] text-sm text-white/45">
+        Opening ZILLION…
+      </div>
+    );
+  }
   if (!user) return <LaunchGate />;
-  return <CapitalShell />;
+  return <CapitalRouter />;
 }

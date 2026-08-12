@@ -15,6 +15,11 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 3000,
+    proxy: {
+      "/api": "http://127.0.0.1:5001",
+      "/auth": "http://127.0.0.1:5001",
+      "/health": "http://127.0.0.1:5001",
+    },
   },
   build: {
     outDir: path.resolve(__dirname, "../dist/client"),

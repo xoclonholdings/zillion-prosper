@@ -171,7 +171,18 @@ export function setupLocalAuth(app: Express): void {
     try {
       const exchange = exchangeLaunchGrantForSession(String(req.query.token || ""));
       const nextPath = String(req.query.next || "/");
-      const safeNext = ["/", "/budget", "/trading"].includes(nextPath) ? nextPath : "/";
+      const safeNext = [
+        "/",
+        "/galaxy/zillion",
+        "/capital",
+        "/capital/budget",
+        "/capital/trade",
+        "/capital/trade/live",
+        "/capital/trade/simulation",
+        "/capital/invest",
+        "/budget",
+        "/trading",
+      ].includes(nextPath) ? nextPath : "/";
       const sessionToken = exchange.sessionToken;
       const frontendOrigin = process.env.FRONTEND_URL?.trim().replace(/\/$/, "") || "";
       const crossOrigin = Boolean(frontendOrigin);

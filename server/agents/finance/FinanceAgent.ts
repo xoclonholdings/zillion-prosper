@@ -272,6 +272,8 @@ export class FinanceAgent {
         screenshots: [],
         lessonsLearned: [],
         ruleViolations: [],
+        executionMode: "internal",
+        executionEnvironment: "simulation",
       });
       return {
         agent: "FinanceAgent",

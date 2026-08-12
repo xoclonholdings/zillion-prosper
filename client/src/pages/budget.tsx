@@ -295,11 +295,11 @@ export default function BudgetPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate("/workspaces/finance")}
+          onClick={() => navigate("/capital")}
           className="rounded-xl text-muted-foreground hover:text-foreground zar-button"
         >
           <ChevronLeft size={16} className="mr-1" />
-          Finance workspace
+          CAPITAL Desk
         </Button>
         <Button
           variant="ghost"

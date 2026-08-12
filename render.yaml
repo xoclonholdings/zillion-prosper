@@ -18,3 +18,7 @@ services:
         sync: false
       - key: FRONTEND_URL
         sync: false
+      - key: VITE_ZAR_APP_URL
+        sync: false
+      - key: VITE_ZCOS_PORTAL_URL
+        sync: false

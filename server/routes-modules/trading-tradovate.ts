@@ -156,6 +156,7 @@ export function registerTradingTradovateRoutes(app: Express): void {
       authorizationDecisionId: authorization.decision.id,
       authorizationDecision: authorization.decision.decision as AuthorizationDecision,
       executionMode: status.environment === "live" ? "live" : "external_paper",
+      executionEnvironment: status.environment === "live" ? "live" : "external_paper",
       executionProvider: "tradovate",
       externalOrderId: String(result.orderId),
       externalOrderStatus: "submitted",
