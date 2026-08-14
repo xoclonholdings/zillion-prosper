@@ -24,18 +24,24 @@ PROSPER is not a planet or eighth domain. CAPITAL is not an extra planet. Budget
 
 History is universal Console activity outside the five Dock controls and does not automatically become Memory.
 
+## User-facing completion rule
+
+No visible ZILLION action may terminate at a dead button or placeholder-only page.
+
+When a requested Capital action requires something that is not yet available in the current owner context — for example a broker connection, account identifier, access token, market-data source, uploaded statement, authorization, qualification evidence, or production certification — ZAR must identify the missing prerequisite and ask the user for it at the point it is needed.
+
+The interface should expose the task and the next required user action, not the internal engine architecture.
+
 ## Canonical ownership
 
 ZILLION owns all runtime code and durable state for:
 
 - Budgeting and treasury allocation
-- Investing domain state and market research
+- Investing and holdings access
 - Trading education and assessments
 - Strategy, thesis, scanner, backtest, validation, and paper-trading systems
 - Broker and market-data connections
 - Trading progression, journals, performance, qualification, and governance
-
-Ownership does not imply that every external provider is already connected. Investing holdings and Live execution must report their real implementation state and may not fabricate balances, positions, transactions, provider connectivity, or certification.
 
 ZAR does not own or write these domains. It may classify a Finance intent, launch ZILLION, operate Chat in ZILLION/CAPITAL context, or invoke the Capital agent through a ZCOS-issued typed capability.
 
@@ -45,7 +51,7 @@ Capital-specific seed templates travel with this domain implementation. ZYLO Aut
 
 Identity, global Memory, shared Knowledge, Apps/Extensions, Settings, Portal transport, model access, web search, approvals, and audit remain ZCOS authorities.
 
-ZILLION presents the seven shared domains in its galaxy but does not duplicate their canonical records.
+ZILLION presents the seven shared domains in its galaxy but does not duplicate their canonical records. Shared-domain navigation passes the active `galaxy=ZILLION` and `desk=CAPITAL` context into the canonical ZCOS authority.
 
 ZILLION accesses shared authorities only through signed calls whose canonical envelope binds timestamp, message ID, owner ID, method, path, and exact request body.
 
@@ -71,7 +77,7 @@ Trade expands in the Dock interaction to expose only:
 
 `LIVE | SIMULATION`
 
-Invest opens the ZILLION investing surface and must truthfully report when a canonical holdings/portfolio source is not yet connected.
+Invest opens the ZILLION investing workspace and consumes verified holdings from an authorized source. If no holdings source exists, ZAR asks the user to connect a brokerage account or provide a statement through Upload instead of presenting invented data.
 
 ## Trading product boundary
 
@@ -88,6 +94,31 @@ Shared Trading Intelligence may support both environments where appropriate, inc
 
 Simulation and Live must retain separate balances, orders, positions, transactions, P/L, provider provenance, and execution-environment provenance. No Simulation action may cross silently into Live execution.
 
+## Live prerequisite flow
+
+Live is a complete prerequisite-driven workspace rather than a blocked landing page.
+
+ZAR checks the owner context and then asks only for what is missing:
+
+1. Production broker connection.
+2. Provider-required account credentials or OAuth/access token material.
+3. Account selection when more than one account exists.
+4. Current market-data access when a quote is required.
+5. Qualification or testing evidence required by Trading Governance.
+6. Armed risk controls.
+7. Explicit production certification setting.
+8. Explicit user confirmation of the exact order.
+
+Webull account data uses the provider's account-list, account-position, account-balance, and order-history APIs when the connected credential has the required access token. Tradovate remains available for supported futures execution.
+
+A missing prerequisite is a request for user/operator input, not a fake success state.
+
+## Investing
+
+Invest uses verified brokerage holdings. The first supported direct holdings source is Webull account positions. ZAR may also request a statement through the canonical Upload path when the user needs another source.
+
+Investing never fabricates holdings, balances, cost basis, gains/losses, or transaction history.
+
 ## Authentication
 
 - ZCOS issues 90-second `launch` or `capability` grants.
@@ -100,12 +131,14 @@ Simulation and Live must retain separate balances, orders, positions, transactio
 
 `trading_state` and `budget_state` are canonical in the ZILLION database. `capital_migration_batches` records controlled state imports. ZAR must not continue as a Finance or Trading writer after cutover.
 
-Any future canonical portfolio/holdings state must also belong to ZILLION rather than being duplicated into ZAR.
+Provider holdings remain provider-authoritative observations unless and until a dedicated canonical portfolio record is introduced. Any future canonical portfolio state belongs to ZILLION rather than being duplicated into ZAR.
 
 ## Execution certification
 
-Research, simulation, paper trading, and governed approvals are supported. Live trading is not certified.
+Research, Simulation, broker connectivity, account inspection, order preparation, and governed approvals are implemented independently from the final production-execution certification.
 
-The certification constant is hard-coded false, execution routes reject uncertified live orders, and startup does not activate an autonomous trade scheduler.
+Live execution is fail-closed by default through `ZILLION_LIVE_TRADING_CERTIFIED=false`. The code path is not permanently disabled: an operator may set the value to `true` only after the deployment/security certification has been completed. Production broker connectivity, qualification, risk controls, and explicit order confirmation remain separate gates even after certification is enabled.
 
-The Live UI may exist and show readiness state, but it must never represent simulated, demo, rejected, unsubmitted, or otherwise non-real execution as Live.
+Startup does not activate an autonomous live-trade scheduler.
+
+The Live UI must never represent simulated, demo, rejected, unsubmitted, or otherwise non-real execution as Live.
