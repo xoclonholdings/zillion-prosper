@@ -5,13 +5,18 @@ import {
   WEBULL_PROVIDER,
   explainWebullAuthFailure,
   getWebullConnection,
+  resolveActiveWebullCredential,
+  resolvedValue,
   webullCredentialCandidates,
   webullFetch,
   type WebullCredentialCandidate,
 } from "./WebullShared";
 
-/** GET /openapi/account/list (v2) — confirmed against the SDK's own request class. */
+/** GET /openapi/account/list (v2) — confirmed against Webull's Trading API. */
 const ACCOUNT_LIST_PATH = "/openapi/account/list";
+const ACCOUNT_BALANCE_PATH = "/openapi/assets/balance";
+const ACCOUNT_POSITIONS_PATH = "/openapi/assets/positions";
+const ORDER_HISTORY_PATH = "/openapi/trade/order/history";
 
 function parseAccounts(data: any): ExecutionAccountSummary[] {
   const raw = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
@@ -21,6 +26,16 @@ function parseAccounts(data: any): ExecutionAccountSummary[] {
     type: String(a?.account_type ?? a?.accountType ?? a?.type ?? "unknown"),
     raw: a,
   }));
+}
+
+function flattenOrders(data: any): unknown[] {
+  const groups = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
+  const out: unknown[] = [];
+  for (const group of groups) {
+    if (Array.isArray(group?.orders)) out.push(...group.orders);
+    else if (group) out.push(group);
+  }
+  return out;
 }
 
 async function fetchAccountList(
@@ -55,9 +70,8 @@ async function fetchAccountList(
 
 /**
  * Test the Webull connection: try every credential/endpoint candidate,
- * reconcile the saved account id against Webull's live list (a saved id
- * is kept only if Webull still returns it; otherwise the first live
- * account is adopted), and persist the resolved account.
+ * reconcile the saved account id against Webull's live list, and persist the
+ * credential source/endpoint that actually verified.
  */
 export async function testWebullConnection(userId: string): Promise<{
   ok: boolean;
@@ -89,28 +103,19 @@ export async function testWebullConnection(userId: string): Promise<{
     const selectedAccountId =
       savedAccountId && liveIds.includes(savedAccountId) ? savedAccountId : result.accounts[0]?.id;
 
-    // Always record which credential source and endpoint just verified —
-    // not only when the account id changes. getWebullStatus/placeWebullOrder
-    // prefer this over always defaulting to the env-var candidate, so a
-    // stale/mismatched Render-level key pair can't keep silently signing
-    // real requests after the user's own saved credentials are confirmed
-    // working here.
     const fieldsToSave: Record<string, string> = {
       endpoint: candidate.endpoint,
       environment: candidate.mode,
       credentialSource: candidate.source,
     };
-    if (selectedAccountId && selectedAccountId !== savedAccountId) {
-      fieldsToSave.accountId = selectedAccountId;
-    }
+    if (selectedAccountId && selectedAccountId !== savedAccountId) fieldsToSave.accountId = selectedAccountId;
     const changed =
       connection?.fields?.endpoint !== fieldsToSave.endpoint ||
       connection?.fields?.environment !== fieldsToSave.environment ||
       connection?.fields?.credentialSource !== fieldsToSave.credentialSource ||
       Boolean(fieldsToSave.accountId);
-    if (changed) {
-      await TradingIntegrationsStore.connect({ userId, provider: WEBULL_PROVIDER, fields: fieldsToSave });
-    }
+    if (changed) await TradingIntegrationsStore.connect({ userId, provider: WEBULL_PROVIDER, fields: fieldsToSave });
+
     return {
       ok: true,
       endpoint: candidate.endpoint,
@@ -119,7 +124,7 @@ export async function testWebullConnection(userId: string): Promise<{
       accounts: result.accounts,
       message: selectedAccountId
         ? `Webull account-list succeeded using ${candidate.source} on ${candidate.endpoint}. Account ${selectedAccountId} is selected.`
-        : `Webull account-list succeeded using ${candidate.source} on ${candidate.endpoint}, but Webull returned no accounts. Add the paper account ID manually.`,
+        : `Webull account-list succeeded using ${candidate.source} on ${candidate.endpoint}, but Webull returned no accounts. Add the account ID manually.`,
     };
   }
   return {
@@ -140,40 +145,68 @@ export async function listWebullAccounts(userId: string): Promise<{
   const credentials = webullCredentialCandidates(connection);
   for (const candidate of credentials) {
     const result = await fetchAccountList(candidate);
-    if (result.ok) {
-      return { connected: true, accounts: result.accounts, note: result.message };
-    }
+    if (result.ok) return { connected: true, accounts: result.accounts, note: result.message };
   }
   const status = await getWebullStatus(userId);
   return { connected: status.connected, accounts: status.accounts, note: status.note };
 }
 
+async function authenticatedAccountRequest(userId: string, path: string, extraQuery: Record<string, string> = {}) {
+  const connection = await getWebullConnection(userId);
+  const candidate = resolveActiveWebullCredential(connection);
+  const accountId = resolvedValue(connection, "accountId", "WEBULL_ACCOUNT_ID");
+  const accessToken = resolvedValue(connection, "accessToken", "WEBULL_ACCESS_TOKEN");
+  if (!candidate) return { ok: false as const, note: "ZAR needs your Webull App Key and App Secret.", data: null };
+  if (!accountId) return { ok: false as const, note: "ZAR needs a Webull account ID. Run the connection test first.", data: null };
+  if (!accessToken) return { ok: false as const, note: "ZAR needs the Webull access token for account data.", data: null };
+
+  const result = await webullFetch({
+    host: candidate.endpoint,
+    path,
+    appKey: candidate.appKey,
+    appSecret: candidate.appSecret,
+    query: { account_id: accountId, ...extraQuery },
+    extraHeaders: { "x-access-token": accessToken, "x-version": "v2" },
+  });
+  if (!result.ok) {
+    return {
+      ok: false as const,
+      note: result.error || explainWebullAuthFailure(`HTTP ${result.status}: ${result.text.slice(0, 300)}`, candidate.endpoint),
+      data: null,
+    };
+  }
+  return { ok: true as const, note: `Webull returned live account data for ${accountId}.`, data: result.data };
+}
+
+/** Current account balance/buying-power data from Webull. */
+export async function getWebullBalance(userId: string): Promise<{
+  connected: boolean;
+  balance: unknown | null;
+  note: string;
+}> {
+  const result = await authenticatedAccountRequest(userId, ACCOUNT_BALANCE_PATH);
+  return { connected: result.ok, balance: result.data, note: result.note };
+}
+
+/** Current holdings/positions from Webull's official Account Positions endpoint. */
 export async function listWebullPositions(userId: string): Promise<{
   connected: boolean;
   positions: unknown[];
   note: string;
 }> {
-  const status = await getWebullStatus(userId);
-  return {
-    connected: status.connected,
-    positions: [],
-    note: status.configured
-      ? "Webull position sync is reserved for a future build."
-      : status.note,
-  };
+  const result = await authenticatedAccountRequest(userId, ACCOUNT_POSITIONS_PATH);
+  if (!result.ok) return { connected: false, positions: [], note: result.note };
+  const raw = Array.isArray(result.data) ? result.data : Array.isArray(result.data?.data) ? result.data.data : [];
+  return { connected: true, positions: raw, note: result.note };
 }
 
+/** Recent broker order history (up to 100 records in the default seven-day window). */
 export async function listWebullOrders(userId: string): Promise<{
   connected: boolean;
   orders: unknown[];
   note: string;
 }> {
-  const status = await getWebullStatus(userId);
-  return {
-    connected: status.connected,
-    orders: [],
-    note: status.configured
-      ? "Webull order-history sync is reserved for a future build."
-      : status.note,
-  };
+  const result = await authenticatedAccountRequest(userId, ORDER_HISTORY_PATH, { page_size: "100" });
+  if (!result.ok) return { connected: false, orders: [], note: result.note };
+  return { connected: true, orders: flattenOrders(result.data), note: result.note };
 }
