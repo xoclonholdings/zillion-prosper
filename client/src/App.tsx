@@ -3,7 +3,6 @@ import { Route, Switch, useLocation } from "wouter";
 import { ShieldCheck } from "lucide-react";
 
 import BudgetPage from "@/pages/budget";
-import LegacyTradingIntelligencePage from "@/pages/trading";
 import { Button } from "@/components/ui/button";
 import {
   CapitalOverview,
@@ -39,7 +38,7 @@ function LaunchGate() {
     <main className="min-h-[100dvh] bg-[#020617] px-4 py-16 text-white">
       <section className="zar-glass mx-auto max-w-md rounded-3xl p-6 text-center">
         <ShieldCheck className="mx-auto h-9 w-9 text-emerald-300" />
-        <h1 className="mt-4 text-2xl font-semibold">ZILLION Prosper</h1>
+        <h1 className="mt-4 text-2xl font-semibold">ZILLION</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Capital access is issued by your authenticated ZCOS identity.
         </p>
@@ -88,11 +87,6 @@ function CapitalRouter() {
       <Route path="/capital/trade" component={TradeChoicePage} />
       <Route path="/capital/trade/simulation" component={SimulationWorkspace} />
       <Route path="/capital/trade/live" component={LiveWorkspace} />
-      <Route path="/capital/trade/intelligence">
-        <CapitalWorkspaceShell title="Trading Intelligence">
-          <LegacyTradingIntelligencePage />
-        </CapitalWorkspaceShell>
-      </Route>
       <Route path="/capital/invest" component={InvestWorkspace} />
       <Route path="/budget"><RedirectTo to="/capital/budget" /></Route>
       <Route path="/trading"><RedirectTo to="/capital/trade" /></Route>
