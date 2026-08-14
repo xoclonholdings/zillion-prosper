@@ -1,14 +1,58 @@
-# ZILLION Prosper
+# ZILLION
 
-ZILLION Prosper is the canonical Capital galaxy for budgeting, investing research, market intelligence, paper trading, trading education, strategy validation, broker connections, and governed capital workflows.
+ZILLION is the ZCOS Capital galaxy. It uses the seven shared ZCOS domains:
 
-ZAR is the authenticated conversational front door. It launches ZILLION with a short-lived, owner-bound grant and delegates Finance requests through the typed Capital capability. ZILLION calls shared ZCOS model, web, knowledge, and approval authorities through signed, owner-bound requests.
+- Identity
+- Memory
+- Knowledge
+- Apps
+- Desk
+- Settings
+- Portal
+
+Inside ZILLION, the shared **Desk** domain resolves to the **CAPITAL Desk**. The persistent five-control Dock is **PROSPER**:
+
+`Chat | Upload | Budget | Trade | Invest`
+
+PROSPER is the Dock, not a planet. CAPITAL is the specialized Desk, not an eighth domain. Budget, Trade, and Invest are CAPITAL functions surfaced through PROSPER.
+
+## Capital ownership
+
+ZILLION owns budgeting, investing research, market intelligence, paper trading, trading education, strategy validation, broker connections, and governed capital workflows.
+
+ZAR is the authenticated operator and conversational front door. It launches ZILLION with a short-lived, owner-bound grant and delegates Finance requests through the typed Capital capability. ZILLION calls shared ZCOS model, web, knowledge, and approval authorities through signed, owner-bound requests.
+
+## Trading experience
+
+The normal user-facing Trade entry is intentionally simple:
+
+`Trade -> Live | Simulation`
+
+Tapping **Trade** in the PROSPER Dock exposes **LIVE** and **SIMULATION** inside the Dock interaction. Internal learning, strategy, sandbox, external-paper, evaluation, qualification, governance, validation, provider, and certification machinery remains implementation detail rather than primary user navigation.
+
+Simulation uses isolated simulated capital. Live represents real capital only and remains blocked until separately certified.
 
 ## Safety boundary
 
 Live trading is fail-closed. `server/zcos/trading/LiveCertification.ts` is an immutable certification gate and cannot be enabled by an environment variable. A separate production certification and security review are required before real-money execution can be enabled.
 
 No scheduler that could resolve or transmit trades is started by the application.
+
+## Shared ZCOS authorities
+
+Identity, Memory, Knowledge, Apps, Settings, Portal transport, model access, web search, approvals, and audit remain governed by ZCOS. ZILLION presents the shared domains in its galaxy while preserving their canonical owners.
+
+Chat uses the same ZAR identity with ZILLION/CAPITAL context. Upload uses the canonical ZCOS intake rather than a duplicate ZILLION pipeline.
+
+## Current implementation status
+
+- ZILLION celestial galaxy and seven-domain manifest: implemented.
+- CAPITAL Desk: implemented.
+- PROSPER Dock: implemented with the locked five-control order.
+- Budget: implemented against the ZILLION budget system.
+- Trade / Simulation: implemented over the existing trading intelligence and paper-trading systems.
+- Trade / Live: user surface implemented; real-money execution remains intentionally uncertified and blocked.
+- Invest: ZILLION owns the surface, but a canonical holdings/portfolio provider is not yet connected. The UI must not fabricate holdings or balances.
 
 ## Local development
 
@@ -27,8 +71,7 @@ npm run build
 npm test
 ```
 
-The Webull harness uses mocked transport and does not place network orders.
-Live broker execution remains blocked independently by certification checks.
+The Webull harness uses mocked transport and does not place network orders. Live broker execution remains blocked independently by certification checks.
 
 ## Production configuration
 
