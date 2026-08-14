@@ -4,7 +4,7 @@
  * The implementation is split by concern:
  *   WebullShared.ts      — credential/endpoint resolution, signed fetch
  *   WebullAuth.ts         — connection status, save credentials
- *   WebullAccounts.ts     — account list, connection test
+ *   WebullAccounts.ts     — account list, balance, positions, order history
  *   WebullMarketData.ts   — quotes, bars, symbol recommendation
  *   WebullOrders.ts        — order placement
  *
@@ -16,6 +16,7 @@ export { getWebullStatus, saveWebullCredentials } from "./WebullAuth";
 export {
   testWebullConnection,
   listWebullAccounts,
+  getWebullBalance,
   listWebullPositions,
   listWebullOrders,
 } from "./WebullAccounts";
