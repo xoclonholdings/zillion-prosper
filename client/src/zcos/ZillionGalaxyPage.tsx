@@ -67,8 +67,8 @@ export function ZillionGalaxyPage() {
           )}
         </div>
         <div className="rounded-full border border-emerald-200/15 bg-black/35 px-3 py-2 text-right backdrop-blur">
-          <div className="text-[9px] font-semibold uppercase tracking-[0.24em] text-emerald-300">PROSPER</div>
-          <div className="text-[10px] text-white/55">CAPITAL Desk</div>
+          <div className="text-[9px] font-semibold uppercase tracking-[0.24em] text-emerald-300">ZILLION</div>
+          <div className="text-[10px] text-white/55">PROSPER Dock · CAPITAL Desk</div>
         </div>
       </header>
 
