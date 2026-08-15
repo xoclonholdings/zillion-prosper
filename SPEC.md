@@ -24,6 +24,22 @@ PROSPER is not a planet or eighth domain. CAPITAL is not an extra planet. Budget
 
 History is universal Console activity outside the five Dock controls and does not automatically become Memory.
 
+## Primary Capital experience
+
+The default ZILLION experience is proposal-and-approval, not financial-software operation.
+
+**ZAR does the work. The user makes the meaningful decision.**
+
+The primary interaction model is:
+
+- **Budget** — the user supplies the money/source context ZAR cannot infer; ZAR calculates the allocation and presents **Approve | Change**.
+- **Trade** — the user selects **Live | Simulation**; ZAR scans, researches, builds the setup, sizes risk, and presents **Take Trade | Pass**.
+- **Invest** — ZAR reads verified holdings, performs the portfolio review, and presents one clear recommended next action; the user may use the plan or pass.
+
+Balances, reports, holdings lists, positions, market details, performance metrics, research, governance, progression, provider status, and other machinery remain secondary detail views. They must not become the default workflow simply because the backend supports them.
+
+If ZAR lacks information, data, credentials, authorization, or another prerequisite needed to complete the requested task, ZAR asks for exactly that missing input and continues. It must not force the user to discover the missing requirement by navigating the system.
+
 ## User-facing completion rule
 
 No visible ZILLION action may terminate at a dead button or placeholder-only page.
