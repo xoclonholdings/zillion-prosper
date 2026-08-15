@@ -168,7 +168,7 @@ export default function BudgetPage() {
             <Metric label="Emergency" value={formatCurrency(state?.balances.emergencyFundBalance || 0, currency)} />
             <Metric label="Treasury" value={formatCurrency(state?.balances.treasuryBalance || 0, currency)} />
           </div>
-          {readiness && <p className="mt-4 text-sm text-white/50">{readiness.currentStageLabel} · {readiness.nextMilestoneLabel}</p>}
+          {readiness && <p className="mt-4 text-sm text-white/50">{readiness.stage.label} · {readiness.nextMilestoneLabel}</p>}
           <div className="mt-5 space-y-2">
             {deposits.slice(0, 5).map((deposit) => (
               <div key={deposit.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 p-3 text-sm">
