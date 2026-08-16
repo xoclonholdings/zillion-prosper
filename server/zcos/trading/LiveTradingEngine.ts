@@ -13,20 +13,9 @@ import { isLiveTradingCertified, LIVE_TRADING_CERTIFICATION } from "./LiveCertif
 /**
  * Stage 7 — Live trading (governed).
  *
- * Wires the full control framework ZAR operates a live account inside:
- * per-trade and account risk limits, a kill switch, and the hard gates
- * that must all be satisfied before anything could execute — qualification
- * passed, a broker connected, and the kill switch armed.
- *
- * This module itself never places an order — it only computes and stores
- * the gate state (`getLiveState`/`canExecute`). Real order routing lives
- * in each broker's own route: `POST /api/trading/webull/order` (via
- * `placeWebullLiveOrder`) and `POST /api/trading/tradovate/order` (when
- * connected in "live" mode) both call `getLiveState(userId).canExecute`
- * before touching the broker, so this file is the single source of truth
- * either path defers to. Until a broker resolves to a genuine production
- * connection, `brokerConnected` stays false and status reports
- * "ready, pending broker" instead of pretending it can trade live.
+ * The engine owns the technical gates, but the user should only be asked
+ * for the next thing they can actually do. Internal certification remains
+ * fail-closed and is deliberately ordered after user-actionable requirements.
  */
 
 const CONFIG_SCOPE = "live-config";
@@ -57,13 +46,6 @@ export async function setKillSwitch(userId: string, armed: boolean): Promise<Liv
   return getLiveState(userId);
 }
 
-/**
- * A broker only counts as "connected" for live/funded execution if it's
- * actually resolved to a PRODUCTION connection — a sandbox/demo-only
- * connection (either provider) must never make Live status report
- * "armed", since neither placeWebullLiveOrder nor the Tradovate live
- * order route will actually execute against anything but production.
- */
 async function broker(userId: string): Promise<{ connected: boolean; label: string }> {
   const tv = await tradovateConfigured(userId).catch(() => ({ configured: false, environment: "demo" as const }));
   if (tv.configured && tv.environment === "live") {
@@ -85,10 +67,22 @@ export async function getLiveState(userId: string): Promise<LiveTradingState> {
     (await getQualificationReport(userId).then((r) => r.ready).catch(() => false));
 
   const blockers: string[] = [];
-  if (!isLiveTradingCertified()) blockers.push(LIVE_TRADING_CERTIFICATION.message);
-  if (!qualPassed) blockers.push("Qualification is not passed yet.");
-  if (!brokerInfo.connected) blockers.push("No broker is connected for order routing (connect Webull).");
-  if (!config.killSwitchArmed) blockers.push("Kill switch is not armed.");
+
+  // User-actionable requirements come first because the Capital UI surfaces
+  // only the next blocker. ZAR should ask for something the user can resolve,
+  // not expose an internal engineering checklist.
+  if (!qualPassed) {
+    blockers.push("I need more Simulation evidence before I can responsibly use real money. Keep testing with me in Simulation and I’ll track when we’re ready.");
+  }
+  if (!brokerInfo.connected) {
+    blockers.push("I need a real brokerage account connected before I can place a Live order.");
+  }
+  if (!config.killSwitchArmed) {
+    blockers.push("I need your risk controls turned on before I can place a Live order.");
+  }
+  if (!isLiveTradingCertified()) {
+    blockers.push("Live execution still needs the ZILLION production safety gate enabled. I can keep researching and testing setups without risking real money until that system gate is ready.");
+  }
 
   const canExecute =
     isLiveTradingCertified() &&
@@ -102,10 +96,10 @@ export async function getLiveState(userId: string): Promise<LiveTradingState> {
       : "blocked";
 
   const summary = canExecute
-    ? "All gates satisfied and the kill switch is armed. Live execution runs through the broker bridge once it is enabled."
+    ? "Everything I need is ready. I can research a setup and bring you the decision before any real order is sent."
     : status === "ready_pending_broker"
-      ? "ZAR is qualified and governed — connect Webull to enable live order routing."
-      : `Live is blocked: ${blockers.join(" ")}`;
+      ? "I’m ready to operate Live once you connect the brokerage account you want me to use."
+      : blockers[0] || LIVE_TRADING_CERTIFICATION.message;
 
   return {
     config,
