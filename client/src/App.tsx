@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import {
   CapitalOverview,
   GalaxyDomainPage,
-  InvestWorkspace,
   LiveWorkspace,
   TradeChoicePage,
   ZcosBridgePage,
 } from "@/zcos/CapitalDestinations";
 import { CapitalWorkspaceShell } from "@/zcos/CapitalWorkspaceShell";
+import { InvestWorkspace } from "@/zcos/InvestWorkspace";
 import { SimulationWorkspace } from "@/zcos/SimulationWorkspace";
 import { ZillionGalaxyPage } from "@/zcos/ZillionGalaxyPage";
 import { configuredZarOrigin } from "@/zcos/galaxyManifest";
