@@ -37,7 +37,7 @@ export interface TradeDataAdapter {
   getQuote: (symbol: string, asset: TradingAssetClass) => Promise<MarketQuote | null>;
 }
 
-/** ZAR's own live feed (Yahoo/Stooq/keyed vendors) — never throws, falls back to a paper reference. */
+/** ZAR's own verified market-data feed. No proposal is produced without a current quote. */
 export function internalTradeDataAdapter(): TradeDataAdapter {
   return {
     label: "ZAR's live feed",
@@ -65,7 +65,7 @@ export interface ProposeTradeInput {
   timeframe?: string;
   referencePrice?: number;
   avoidSymbols?: string[];
-  /** Prefixed onto the thesis notes, e.g. "Webull external paper proposal." */
+  /** Prefixed onto the thesis notes for provider/execution context. */
   notesPrefix?: string;
 }
 
@@ -139,9 +139,19 @@ export async function proposeTrade(input: ProposeTradeInput): Promise<ProposeTra
     }
   }
 
+  // Never manufacture entry/stop/target levels from a normalized placeholder price.
+  // If verified market data is unavailable, ZAR asks for/retries the missing data instead.
+  if (!quote || !Number.isFinite(quote.price) || quote.price <= 0) {
+    return {
+      kind: "error",
+      statusCode: 422,
+      error: `ZAR needs a verified current market quote for ${symbol} before it can propose a trade.`,
+    };
+  }
+
   // A neutral read means the indicators don't agree on a direction — ZAR
   // doesn't force a trade just to have one, on any execution target.
-  if (quote?.signal?.signal === "neutral") {
+  if (quote.signal?.signal === "neutral") {
     return {
       kind: "no_trade",
       symbol,
@@ -152,7 +162,7 @@ export async function proposeTrade(input: ProposeTradeInput): Promise<ProposeTra
   }
 
   // The neutral case already returned above, so any signal reaching here is buy/sell.
-  if (directionPreference === "auto" && quote?.signal) {
+  if (directionPreference === "auto" && quote.signal) {
     directionPreference = quote.signal.signal === "buy" ? "long" : "short";
   }
 
@@ -162,7 +172,7 @@ export async function proposeTrade(input: ProposeTradeInput): Promise<ProposeTra
   // symbol's structure doesn't depend on which broker will fill it.
   const series = await getMultiTimeframeSeries(symbol, input.asset).catch(() => []);
   const structureAnalysis = series.length
-    ? analyzeMarketStructure(symbol, series, "Daily", quote?.signal)
+    ? analyzeMarketStructure(symbol, series, "Daily", quote.signal)
     : null;
 
   const strategy = await generateTradeStrategy({
@@ -172,9 +182,9 @@ export async function proposeTrade(input: ProposeTradeInput): Promise<ProposeTra
     market: input.market,
     directionPreference,
     timeframe: input.timeframe,
-    referencePrice: input.referencePrice ?? quote?.price,
-    stopDistance: quote?.atr,
-    signal: quote?.signal ?? null,
+    referencePrice: input.referencePrice ?? quote.price,
+    stopDistance: quote.atr,
+    signal: quote.signal ?? null,
     structureAnalysis,
   });
 
@@ -204,7 +214,7 @@ export async function proposeTrade(input: ProposeTradeInput): Promise<ProposeTra
     strategy,
     thesisId: thesis.id,
     marketData: summarize(quote),
-    signal: quote?.signal ?? null,
+    signal: quote.signal ?? null,
     structure: structureAnalysis,
     recommendedSymbol: recommendation ? { symbol: recommendation.symbol, reason: recommendation.reason } : null,
   };
